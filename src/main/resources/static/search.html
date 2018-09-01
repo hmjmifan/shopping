@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh">
+
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B"
+        crossorigin="anonymous">
+    <!-- Vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <!-- axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 导航栏 -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="/">图书管理系统</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item ">
+                        <a class="nav-link" href="/">首页
+                            <span class="sr-only">(current)</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/addbook">添加书籍</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/searchbook">分类查询</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/borrow">借书还书</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">关于</a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0" v-if="user!=null">
+                    <h3 style="color:white">你好：{{user}}</h3>
+                    <button class="mx-3 btn btn-outline-success my-2 my-sm-0" type="button" data-toggle="modal"
+                        data-target="#exampleModal">退出</button>
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">提示信息</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    是否决定要退出登录
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">我再想想</button>
+                                    <button type="button" class="btn btn-primary" data-dismiss="modal" @click="leave">去意已决</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </nav>
+        <!--  -->
+        <div class="jumbotron mt-5 mx-3">
+            <div class="accordion" id="accordionExample">
+                <!--分类查询  -->
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" @click="clean"
+                            data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            按类别查询
+                        </button>
+                    </div>
+                </div>
+                <!-- 分类查询内部 -->
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <div class="jumbotron bg-light">
+                            <div class="row">
+                                <div class="col-lg-2">
+                                    <h3>请选择书籍类别</h3>
+                                </div>
+                                <div class="col-lg-7">
+                                    <div class="form-group">
+                                        <select class="form-control" v-model="clazz">
+                                            <option :value="item.id" v-for="item in classify">{{item.classify}}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <button type="button" @click="search" class="btn btn-primary btn-block">查询</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 表单 -->
+                        <table class="table" v-if="bc==1">
+                            <thead>
+                                <tr>
+                                    <th>编号</th>
+                                    <th>图片</th>
+                                    <th>图书名</th>
+                                    <th>作者</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, index) in booklist" :key="index">
+                                    <td scope="row">{{index+1}}</td>
+                                    <td>
+                                        <img :src="item.picture" style="width:150px;height:150px; " class="img-fluid">
+                                    </td>
+                                    <td>
+                                        <h4>{{item.bookname}}</h4>
+                                    </td>
+                                    <td>
+                                        <h4>{{item.author}}</h4>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <!-- 书籍名查询 -->
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" @click="clean"
+                                data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                按书籍名查询
+                            </button>
+                        </h5>
+                    </div>
+                    <!-- 书籍名查询内部 -->
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+                        <div class="card-body">
+                            <div class="jumbotron bg-light">
+                                <div class="row">
+                                    <div class="col-lg-2">
+                                        <h3>请输入书籍名</h3>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" v-model="bookname" placeholder="请输入书籍名">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <button type="button" class="btn btn-primary btn-block" @click="booksearch">查询</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table" v-if="bb==1">
+                                <thead>
+                                    <tr>
+                                        <th>图片</th>
+                                        <th>图书名</th>
+                                        <th>作者</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <img :src="onebook.picture" style="width:150px;height:150px; " class="img-fluid">
+                                        </td>
+                                        <td>
+                                            <h4>{{onebook.bookname}}</h4>
+                                        </td>
+                                        <td>
+                                            <h4>{{onebook.author}}</h4>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <h3 v-if="bb==2">查无此书，请重新输入</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 作者查询 -->
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" @click="clean"
+                                data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                按作者查询
+                            </button>
+                        </h5>
+                    </div>
+                    <!-- 作者查询内部 -->
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+                        <div class="card-body">
+                            <div class="jumbotron bg-light">
+                                <div class="row">
+                                    <div class="col-lg-2">
+                                        <h3>请选择作者</h3>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" v-model="author" placeholder="请输入作者名">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <button type="button" class="btn btn-primary btn-block" @click="searchauthor">查询</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 表单 -->
+                            <table class="table" v-if="ba==1">
+                                <thead>
+                                    <tr>
+                                        <th>编号</th>
+                                        <th>图片</th>
+                                        <th>图书名</th>
+                                        <th>作者</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(item, index) in authorsbook" :key="index">
+                                        <td scope="row">{{index+1}}</td>
+                                        <td>
+                                            <img :src="item.picture" style="width:150px;height:150px; " class="img-fluid">
+                                        </td>
+                                        <td>
+                                            <h4>{{item.bookname}}</h4>
+                                        </td>
+                                        <td>
+                                            <h4>{{item.author}}</h4>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <h3 v-if="ba==2">查无此人,请重新输入</h3>
+                        </div>
+                    </div>
+                </div>
+                <!--  -->
+            </div>
+        </div>
+        <!-- footer -->
+        <div class="jumbotron jumbotron-fluid mb-0 mt-3 pb-0 pt-4 text-center fixed-bottom bg-dark text-white font-weight-light text-monospace">
+            <div class="container ">
+                <h1 class="display-5 mb-0 " style="font-size:25%">Copyright(c) 2018 hmjmifan 版权所有</h1>
+            </div>
+        </div>
+
+
+
+    </div>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                users: [],
+                user: '',
+                classify: [],
+                clazz: 0,
+                booklist: [],
+                bookname: '',
+                onebook: [],
+                books: 0,
+                author: '',
+                authorsbook: [],
+                bc: 0,
+                ba: 0,
+                bb: 0,
+
+            },
+            methods: {
+                leave: function () {
+                    axios.post("api/v1/book/big")
+                        .then((response) => {
+                            console.log(response.data);
+                            window.location.href = "/";
+                        })
+                        .catch((error) => {
+
+                        })
+                },
+                clean: function () {
+                    this.ba = 0;
+                    this.bb = 0;
+                    this.bc = 0;
+                },
+                search: function () {
+                    this.bc = 1;
+                    axios.post("api/v1/book/search", {
+                            classify: this.clazz
+                        })
+                        .then((response) => {
+                            this.booklist = response.data;
+
+
+
+                        })
+                        .catch((error) => {})
+
+                    console.log(this.clazz);
+
+                },
+                booksearch: function () {
+
+                    axios.post("api/v1/book/searchone", {
+                            bookname: this.bookname
+
+                        })
+                        .then((response) => {
+                            console.log(response.data);
+                            if (response.data.msg == 0) {
+                                this.bb = 2;
+                                this.bookname = '';
+                            }
+                            if (response.data.msg == 1) {
+                                this.bb = 1;
+                                this.onebook = response.data.book;
+                            }
+
+
+                        })
+                        .catch((error) => {
+
+                        })
+
+                },
+                searchauthor: function () {
+                    this.ba = 1;
+                    axios.post("api/v1/book/searchauthor", {
+                            author: this.author
+                        })
+                        .then((response) => {
+                            console.log(response.data);
+                            if (response.data.msg == 0) {
+                                this.ba = 2;
+                                this.author = '';
+                            }
+                            if (response.data.msg == 1) {
+                                this.ba = 1;
+                                this.authorsbook = response.data.books;
+
+
+
+
+                            }
+
+                        })
+                        .catch((error) => {})
+                }
+
+            },
+            mounted: function () {
+                axios.get("api/v1/book/first")
+                    .then((response) => {
+                        console.log(response.data);
+                        this.users = response.data.user;
+                        this.user = this.users.name;
+                        console.log(this.user);
+
+                        this.classify = response.data.classify;
+                        console.log(this.classify);
+
+                    })
+                    .catch((error) => {})
+            },
+        })
+    </script>
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

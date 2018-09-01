@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh">
+
+<head>
+	<title>AddBook</title>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B"
+	    crossorigin="anonymous">
+	<!-- Vue -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+	<!-- axios -->
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+</head>
+
+<body>
+	<div id="app">
+		<!-- 导航栏 -->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+			<a class="navbar-brand" href="/">图书管理系统</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+			    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item ">
+						<a class="nav-link" href="/">首页
+							<span class="sr-only">(current)</span>
+						</a>
+					</li>
+					<li class="nav-item active">
+						<a class="nav-link" href="/addbook">添加书籍</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/searchbook">分类查询</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/borrow">借书还书</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/about">关于</a>
+					</li>
+
+
+				</ul>
+				<form v-if="user!=null" class="form-inline my-2 my-lg-0">
+					<h3 style="color:white">你好：{{user}}</h3>
+					<button class="mx-3 btn btn-outline-success my-2 my-sm-0" type="button" data-toggle="modal" data-target="#exit">退出</button>
+					<!-- Modal -->
+					<div class="modal fade" id="exit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="exampleModalLabel">提示信息</h5>
+									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="modal-body">
+									是否决定要退出登录
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary" data-dismiss="modal">我再想想</button>
+									<button type="button" class="btn btn-primary" data-dismiss="modal" @click="leave">去意已决</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</nav>
+		<!-- 容器 -->
+		<div class="container mt-5">
+			<!-- 展板 -->
+			<div class="jumbotron">
+				<div class="form-group">
+					<label for="">请添加书籍</label>
+					<input type="text" v-model="bookname" class="form-control" placeholder="请输入要添加的书籍名">
+				</div>
+				<div class="form-group">
+					<label for="">请选择书籍类别</label>
+					<select class="form-control" v-model="clazz">
+						<option :value="item.id" v-for="item in classify">{{item.classify}}</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="">书籍作者</label>
+					<input type="text" class="form-control" v-model="author" placeholder="请输入作者">
+				</div>
+				<!-- 愚蠢的强行上传图片 -->
+				<div class="form-group">
+					<label for="">请上传图片</label>
+					<input type="file" class="form-control-file" v-model.lazy="srcc">
+				</div>
+				<!-- 提交按钮 -->
+				<button v-if="clazz==''||bookname==''||author==''" type="button" class="btn btn-primary btn-lg btn-block mt-3"
+				    disabled>提交</button>
+				<button v-else type="button" @click="click" class="btn btn-primary btn-lg btn-block mt-3" data-toggle="modal"
+				    data-target="#exampleModal">提交</button>
+			</div>
+			<!-- 弹窗 -->
+			<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			    aria-hidden="true">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">提示信息</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							{{smallbody}}
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+							<button type="button" class="btn btn-primary" @click="ok" data-dismiss="modal">OK</button>
+
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--  -->
+		</div>
+		<!-- footer -->
+		<div class="jumbotron jumbotron-fluid mb-0 mt-3 pb-0 pt-4 text-center fixed-bottom bg-dark text-white font-weight-light text-monospace">
+			<div class="container ">
+				<h1 class="display-5 mb-0 " style="font-size:25%">Copyright(c) 2018 hmjmifan 版权所有</h1>
+			</div>
+		</div>
+	</div>
+
+
+
+	<script>
+		new Vue({
+			el: '#app',
+			data: {
+				bookname: '',
+				info: [],
+				user: '',
+				classify: [],
+				clazz: 0,
+				author: '',
+				smallbody: '',
+				srcc: '',
+				users: [],
+			},
+			methods: {
+				leave: function () {
+					axios.post("api/v1/book/big")
+						.then((response) => {
+							console.log(response.data);
+							window.location.href = "/";
+						})
+						.catch((error) => {
+
+						})
+				},
+				ok: function () {
+					this.bookname = '';
+					this.clazz = 0;
+					this.author = '';
+					this.srcc = '';
+				},
+				click: function () {
+
+					console.log(this.clazz);
+
+
+
+					axios.post("api/v1/book/first", {
+							bookname: this.bookname,
+							classify: this.clazz,
+							author: this.author,
+							picture: this.srcc,
+						})
+						.then((response) => {
+							if (response.data == 1) {
+								this.smallbody = '添加成功，感谢您的参与'
+							}
+
+						})
+						.catch((error) => {
+
+						})
+
+				},
+			},
+			mounted: function () {
+
+				axios.get("/api/v1/book/first")
+					.then((response) => {
+						this.info = response.data;
+						this.classify = this.info.classify;
+						console.log(this.info);
+
+						this.users = this.info.user;
+						this.user = this.users.name
+						console.log(this.user);
+					})
+					.catch((error) => {})
+			},
+		})
+	</script>
+
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+	    crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+	    crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
+	    crossorigin="anonymous"></script>
+</body>
+
+</html>
